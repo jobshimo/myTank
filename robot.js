@@ -4,45 +4,9 @@ async function main(tank) {
   let detectedAngle = 0;
   let defaultSpeed = 49;
 
-  async function getAngle(
-    xOrYPosition,
-    limitOne,
-    limitTwo,
-    angleOne,
-    angleTwo,
-    angleThree
-  ) {
-    switch (true) {
-      case xOrYPosition >= limitOne:
-        await tank.drive(angleOne, defaultSpeed);
-        break;
-      case xOrYPosition < limitTwo:
-        await tank.drive(angleTwo, defaultSpeed);
-        break;
-      default:
-        await tank.drive(angleThree, defaultSpeed);
-        break;
-    }
-  }
-
-  async function avoidCollision(x, y) {
-    switch (true) {
-      case x >= 940:
-        await getAngle(y, 700, 300, 225, 135, 180);
-        break;
-      case x <= 400:
-        await getAngle(y, 700, 300, 315, 45, 0);
-        break;
-      case y >= 700:
-        await getAngle(x, 940, 400, 225, 315, 270);
-        break;
-      case y <= 300:
-        await getAngle(x, 940, 400, 135, 45, 90);
-        break;
-    }
-  }
-
-  async function start() {
+  // loop principal
+  while (true) {
+    await tank.drive(90, defaultSpeed);
     let checkPosition;
     let distance;
     let shotAngle;
@@ -70,10 +34,43 @@ async function main(tank) {
     }
   }
 
-  // main loop
+  // Evita colición con los limites de la arena.
+  async function avoidCollision(x, y) {
+    switch (true) {
+      case x >= 940:
+        await getAngle(y, 700, 300, 225, 135, 180);
+        break;
+      case x <= 400:
+        await getAngle(y, 700, 300, 315, 45, 0);
+        break;
+      case y >= 700:
+        await getAngle(x, 940, 400, 225, 315, 270);
+        break;
+      case y <= 300:
+        await getAngle(x, 940, 400, 135, 45, 90);
+        break;
+    }
+  }
 
-  while (true) {
-    await tank.drive(90, defaultSpeed);
-    await start();
+  // Función axuliar de avoidCollision() para obtener el angulo de giro.
+  async function getAngle(
+    xOrYPosition,
+    limitOne,
+    limitTwo,
+    angleOne,
+    angleTwo,
+    angleThree
+  ) {
+    switch (true) {
+      case xOrYPosition >= limitOne:
+        await tank.drive(angleOne, defaultSpeed);
+        break;
+      case xOrYPosition < limitTwo:
+        await tank.drive(angleTwo, defaultSpeed);
+        break;
+      default:
+        await tank.drive(angleThree, defaultSpeed);
+        break;
+    }
   }
 }
