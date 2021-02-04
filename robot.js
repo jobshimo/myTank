@@ -14,13 +14,13 @@ async function main(tank) {
   ) {
     switch (true) {
       case xOrYPosition >= limitOne:
-        await tank.drive(angleOne, defaultSpeed)
+        await tank.drive(angleOne, defaultSpeed);
         break;
       case xOrYPosition < limitTwo:
-        await tank.drive(angleTwo, defaultSpeed)
+        await tank.drive(angleTwo, defaultSpeed);
         break;
       default:
-        await tank.drive(angleThree, defaultSpeed)
+        await tank.drive(angleThree, defaultSpeed);
         break;
     }
   }
