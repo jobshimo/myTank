@@ -1,112 +1,70 @@
 "use strict";
 
 async function main(tank) {
-  let detected = false;
   let detectedAngle = 0;
+  let defaultSpeed = 49;
 
-  async function changeCourse(tank, angle) {
-    await tank.drive(angle, 49);
-  }
-
-  async function avoidCollision(tank, x, y) {
-    if (x <= 400 || x >= 800) {
-      if (x >= 800) {
-        switch (true) {
-          case y >= 700:
-            await changeCourse(tank, 225);
-            break;
-          case y < 300:
-            await changeCourse(tank, 135);
-            break;
-          default:
-            await changeCourse(tank, 180);
-            break;
-        }
-      } else {
-        switch (true) {
-          case y >= 600:
-            await changeCourse(tank, 315);
-            break;
-          case y < 400:
-            await changeCourse(tank, 45);
-            break;
-          default:
-            await changeCourse(tank, 0);
-            break;
-        }
-      }
-    } else if (y <= 400 || y >= 600) {
-      if (y >= 600) {
-        switch (true) {
-          case x >= 800:
-            await changeCourse(tank, 225);
-            break;
-          case x < 400:
-            await changeCourse(tank, 315);
-            break;
-          default:
-            await changeCourse(tank, 270);
-            break;
-        }
-      } else {
-        switch (true) {
-          case x >= 800:
-            await changeCourse(tank, 135);
-            break;
-          case x < 400:
-            await changeCourse(tank, 45);
-            break;
-          default:
-            await changeCourse(tank, 90);
-            break;
-        }
-      }
+  async function getAngle(
+    xOrYPosition,
+    limitOne,
+    limitTwo,
+    angleOne,
+    angleTwo,
+    angleThree
+  ) {
+    switch (true) {
+      case xOrYPosition >= limitOne:
+        await tank.drive(angleOne, defaultSpeed)
+        break;
+      case xOrYPosition < limitTwo:
+        await tank.drive(angleTwo, defaultSpeed)
+        break;
+      default:
+        await tank.drive(angleThree, defaultSpeed)
+        break;
     }
   }
 
-  async function turnTankAndShot(tank, shot) {
-    let smalDistance = 2;
-    let longDistance = 8;
+  async function avoidCollision(x, y) {
+    switch (true) {
+      case x >= 940:
+        await getAngle(y, 700, 300, 225, 135, 180);
+        break;
+      case x <= 400:
+        await getAngle(y, 700, 300, 315, 45, 0);
+        break;
+      case y >= 700:
+        await getAngle(x, 940, 400, 225, 315, 270);
+        break;
+      case y <= 300:
+        await getAngle(x, 940, 400, 135, 45, 90);
+        break;
+    }
+  }
+
+  async function start() {
+    let checkPosition;
+    let distance;
     let shotAngle;
-    if (shot <= 300) {
-      shotAngle = smalDistance;
-    } else if (shot > 300) {
-      shotAngle = longDistance;
-    }
-    await tank.drive(detectedAngle, 49);
-    await tank.shoot(detectedAngle + shotAngle, shot + 70);
-    await tank.shoot(detectedAngle - shotAngle, shot + 70);
-    detected = false;
-  }
-
-  async function scanerStart(tank) {
-    for (let i = detectedAngle; !detected; i = i + 25) {
-      let checkPosition;
-      let X = await tank.getX();
-      let Y = await tank.getY();
-      if (X > 1100 || X < 200 || Y > 800 || Y < 200) {
-        checkPosition = true;
-      } else {
-        checkPosition = false;
-      }
+    let X;
+    let Y;
+    for (let i = detectedAngle; true; i = i + 25) {
+      X = await tank.getX();
+      Y = await tank.getY();
+      X > 1100 || X < 200 || Y > 800 || Y < 200
+        ? (checkPosition = true)
+        : (checkPosition = false);
       if (checkPosition) {
-        await avoidCollision(tank, X, Y);
-      } else if (!checkPosition) {
-        let shot;
-        let distance;
+        await avoidCollision(X, Y);
+      } else {
         distance = await tank.scan(i, 10);
         if (distance > 0) {
-          detected = true;
-          if (distance > 0) {
-            shot = distance;
-            detectedAngle = i;
-            if (i > 60) {
-              i = i - 50;
-            } else {
-              i = i - 15;
-            }
-          }
-          await turnTankAndShot(tank, shot);
+          detectedAngle = i;
+          i > 60 ? (i -= 50) : (i -= 15);
+          distance <= 300 ? (shotAngle = 2) : (shotAngle = 8);
+          await tank.drive(detectedAngle, defaultSpeed);
+          await tank.shoot(detectedAngle + shotAngle, distance + 70);
+          await tank.shoot(detectedAngle - shotAngle, distance + 70);
         }
       }
     }
@@ -115,9 +73,7 @@ async function main(tank) {
   // main loop
 
   while (true) {
-    await tank.drive(90, 49);
-    while (!detected) {
-      await scanerStart(tank);
-    }
+    await tank.drive(90, defaultSpeed);
+    await start();
   }
 }
