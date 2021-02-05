@@ -34,7 +34,7 @@ async function main(tank) {
     }
   }
 
-  // Evita colición con los limites de la arena.
+  // Evita colisión con los limites de la arena.
   async function avoidCollision(x, y) {
     switch (true) {
       case x >= 940:
